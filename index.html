@@ -812,8 +812,8 @@ function endGame() {
     const finalScore = score;
 
     let rating = '一般';
-    if (finalScore >= 270) rating = '优秀';
-    else if (finalScore >= 150) rating = '良好';
+    if (finalScore >= 300) rating = '优秀';
+    else if (finalScore >= 200) rating = '良好';
 
     finalScoreEl.textContent = finalScore;
     finalRatingEl.textContent = rating;
