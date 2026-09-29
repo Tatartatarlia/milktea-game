@@ -812,7 +812,7 @@ function endGame() {
     const finalScore = score;
 
     let rating = '一般';
-    if (finalScore >= 250) rating = '优秀';
+    if (finalScore >= 270) rating = '优秀';
     else if (finalScore >= 150) rating = '良好';
 
     finalScoreEl.textContent = finalScore;
@@ -831,7 +831,7 @@ canvas.addEventListener('pointerdown', (e) => {
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
 
-    // 判断是否点在了杯子范围内（稍微放宽一点，方便按中）
+    // 判断是否点在了杯子范围内
     const w = CONFIG.cup.width;
     const h = CONFIG.cup.height;
     const left = cup.x - w / 2 - 10;
@@ -841,9 +841,12 @@ canvas.addEventListener('pointerdown', (e) => {
 
     if (mx >= left && mx <= right && my >= top && my <= bottom) {
         isDragging = true;
-        dragOffsetX = mx - cup.x;   // 记录按住的位置相对杯子中心的偏移
+        dragOffsetX = mx - cup.x;
         lastInput = 'pointer';
         pointerTargetX = cup.x;
+
+        // ★ 捕获指针：即使鼠标移出 canvas/窗口，事件仍会发到这里
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
     }
 });
 
@@ -851,20 +854,26 @@ canvas.addEventListener('pointermove', (e) => {
     if (state !== 'playing' || !isDragging) return;
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
-    pointerTargetX = mx - dragOffsetX;  // 跟随鼠标，但保留按下时的抓取偏移
+    pointerTargetX = mx - dragOffsetX;
     lastInput = 'pointer';
 });
 
-canvas.addEventListener('pointerup', () => {
+canvas.addEventListener('pointerup', (e) => {
+    if (isDragging) {
+        try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
     isDragging = false;
 });
 
-canvas.addEventListener('pointercancel', () => {
+canvas.addEventListener('pointercancel', (e) => {
+    if (isDragging) {
+        try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
     isDragging = false;
 });
 
-// 鼠标移出 canvas 时也要释放拖拽状态
-canvas.addEventListener('pointerleave', () => {
+// ★ 窗口失焦时（比如 Alt+Tab 切走）强制释放拖拽，防止状态卡死
+window.addEventListener('blur', () => {
     isDragging = false;
 });
 
